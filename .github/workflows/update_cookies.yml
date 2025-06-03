@@ -29,13 +29,17 @@ jobs:
         run: |
           python update_cookies.py
 
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GH_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      
       - name: Commit and push updated cookies.txt
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "update-bot"
           git config user.email "update-bot@github.com"
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
           git add cookies.txt
           git commit -m "Update cookies.txt" || echo "no changes"
-          git push origin HEAD:main
+          git push git@github.com:Sigurd313/yt-dlp-server.git HEAD:main
