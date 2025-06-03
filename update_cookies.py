@@ -1,36 +1,31 @@
+import json
 import asyncio
 from playwright.async_api import async_playwright
 
-NETSCAPE_HEADER = "# Netscape HTTP Cookie File\n"
+COOKIES_TXT_PATH = "cookies.txt"
+AUTH_JSON_PATH = "auth.json"
 
-def serialize_cookie(cookie):
-    return "\t".join([
-        cookie["domain"],
-        "TRUE" if not cookie.get("hostOnly", False) else "FALSE",
-        cookie["path"],
-        "TRUE" if cookie.get("secure", False) else "FALSE",
-        str(int(cookie.get("expires", 0))),
-        cookie["name"],
-        cookie["value"]
-    ])
+def format_cookie_netscape(cookie):
+    domain = cookie.get("domain", "")
+    flag = "TRUE" if domain.startswith(".") else "FALSE"
+    path = cookie.get("path", "/")
+    secure = "TRUE" if cookie.get("secure") else "FALSE"
+    expiry = cookie.get("expires", 1893456000)  # ~2030
+    name = cookie["name"]
+    value = cookie["value"]
+    return f"{domain}\t{flag}\t{path}\t{secure}\t{int(expiry)}\t{name}\t{value}"
 
 async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-
-        await page.goto("https://www.youtube.com", timeout=60000)
-
+        context = await browser.new_context(storage_state=AUTH_JSON_PATH)
         cookies = await context.cookies()
-        with open("cookies.txt", "w", encoding="utf-8") as f:
-            f.write(NETSCAPE_HEADER)
-            for cookie in cookies:
-                # yt-dlp requires domain to start with a dot for cross-subdomain
-                if not cookie["domain"].startswith("."):
-                    cookie["domain"] = "." + cookie["domain"]
-                f.write(serialize_cookie(cookie) + "\n")
-
+        netscape_lines = ["# Netscape HTTP Cookie File\n"] + [
+            format_cookie_netscape(cookie) for cookie in cookies
+        ]
+        with open(COOKIES_TXT_PATH, "w", encoding="utf-8") as f:
+            f.write("\n".join(netscape_lines))
         await browser.close()
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
