@@ -1,67 +1,43 @@
-from flask import Flask, request, jsonify
-import subprocess
 import os
-import yt_dlp
+import subprocess
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Путь к cookies.txt
-COOKIES_PATH = os.path.join(os.getcwd(), "cookies.txt")
-
+# Убедиться, что папка downloads существует
+if not os.path.exists("downloads"):
+    os.makedirs("downloads")
 
 @app.route("/download", methods=["POST"])
 def download():
+    data = request.get_json()
+    video_url = data.get("url")
+    video_id = data.get("video_id")
+
+    if not video_url or not video_id:
+        return jsonify({"status": "error", "message": "Missing url or video_id"}), 400
+
+    output_path = f"downloads/{video_id}.mp4"
+    cmd = [
+        "yt-dlp",
+        "--cookies", "cookies.txt",
+        "-o", output_path,
+        video_url,
+    ]
+
     try:
-        data = request.get_json()
-        url = data["url"]
-        video_id = data["video_id"]
-
-        output_path = f"downloads/{video_id}.mp4"
-
-        ydl_opts = {
-            "outtmpl": output_path,
-            "cookiefile": COOKIES_PATH,
-            "quiet": True,
-            "no_warnings": True,
-            "format": "mp4",
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-
+        subprocess.run(cmd, check=True)
         return jsonify({"status": "success", "file": output_path})
-
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 @app.route("/refresh-cookies", methods=["POST"])
 def refresh_cookies():
     try:
-        # Запускаем selenium-скрипт
-        result = subprocess.run(
-            ["python3", "update_cookies_selenium.py"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return jsonify({
-            "status": "ok",
-            "message": "cookies.txt updated",
-            "log": result.stdout
-        })
-
+        subprocess.run(["python3", "update_cookies.py"], check=True)
+        return jsonify({"status": "success", "message": "Cookies updated"})
     except subprocess.CalledProcessError as e:
-        return jsonify({
-            "status": "error",
-            "message": e.stderr or str(e)
-        }), 500
-
-
-@app.route("/", methods=["GET"])
-def index():
-    return "✅ yt-dlp-server is live"
-
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", port=5000)
