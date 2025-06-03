@@ -37,5 +37,5 @@ jobs:
           git config user.email "update-bot@github.com"
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
           git add cookies.txt
-          git commit -m "Update cookies.txt" || echo "no changes to commit"
+          git commit -m "Update cookies.txt" || echo "no changes"
           git push origin HEAD:main
