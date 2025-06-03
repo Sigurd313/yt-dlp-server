@@ -7,7 +7,7 @@ COOKIES_PATH = "cookies.txt"
 
 async def run():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)  # Откроется окно браузера
+        browser = await p.chromium.launch(headless=True)  # Без UI, работает на GitHub Actions
         context = await browser.new_context()
         page = await context.new_page()
 
