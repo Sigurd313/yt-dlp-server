@@ -34,7 +34,7 @@ def download():
 @app.route("/refresh-cookies", methods=["POST"])
 def refresh_cookies():
     try:
-        subprocess.run(["python3", "update_cookies.py"], check=True)
+        subprocess.run(["python3", "update_cookies_selenium.py"], check=True)
         return jsonify({"status": "success", "message": "Cookies updated"})
     except subprocess.CalledProcessError as e:
         return jsonify({"status": "error", "message": str(e)}), 500
