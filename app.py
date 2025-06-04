@@ -1,49 +1,24 @@
-import os
+from flask import Flask, jsonify, request
 import subprocess
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Убедиться, что папка downloads существует
-if not os.path.exists("downloads"):
-    os.makedirs("downloads")
-
-@app.route("/download", methods=["POST"])
-def download():
-    data = request.get_json()
-    video_url = data.get("url")
-    video_id = data.get("video_id")
-
-    if not video_url or not video_id:
-        return jsonify({"status": "error", "message": "Missing url or video_id"}), 400
-
-    output_path = f"downloads/{video_id}.mp4"
-    cmd = [
-        "yt-dlp",
-        "--cookies", "cookies.txt",
-        "-o", output_path,
-        video_url,
-    ]
-
-    try:
-        subprocess.run(cmd, check=True)
-        return jsonify({"status": "success", "file": output_path})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+@app.route("/")
+def index():
+    return "Selenium cookie updater is alive"
 
 @app.route("/refresh-cookies", methods=["POST"])
 def refresh_cookies():
     try:
-        result = subprocess.run(["python3", "update_cookies_selenium.py"], capture_output=True, text=True, check=True)
-        return jsonify({"status": "ok", "message": result.stdout})
+        result = subprocess.run(
+            ["python3", "update_cookies_selenium.py"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return jsonify({"status": "ok", "output": result.stdout})
     except subprocess.CalledProcessError as e:
-        return jsonify({
-            "status": "error",
-            "message": e.stderr,
-            "return_code": e.returncode,
-            "output": e.output
-        }), 500
-
+        return jsonify({"status": "error", "message": e.stderr, "return_code": e.returncode})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=10000)
