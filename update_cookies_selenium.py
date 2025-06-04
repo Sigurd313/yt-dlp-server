@@ -1,6 +1,9 @@
 import undetected_chromedriver as uc
 import time
 
+from selenium.webdriver.chrome.service import Service
+options.binary_location = "/usr/bin/chromium"  # для Render
+
 URL = "https://www.youtube.com"
 COOKIES_TXT = "cookies.txt"
 
