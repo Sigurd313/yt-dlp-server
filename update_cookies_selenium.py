@@ -1,52 +1,43 @@
-import os
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import undetected_chromedriver as uc
-import http.cookiejar as cookielib
+from http.cookiejar import MozillaCookieJar
 
 COOKIES_TXT = "cookies.txt"
-PROFILE_PATH = "selenium-profile"
+PROFILE_DIR = "selenium-profile"
 
 def save_cookies(driver, path):
-    cj = cookielib.MozillaCookieJar()
+    cj = MozillaCookieJar(path)
     for cookie in driver.get_cookies():
-        c = cookielib.Cookie(
-            version=0,
-            name=cookie['name'],
-            value=cookie['value'],
-            port=None,
-            port_specified=False,
-            domain=cookie.get('domain', ''),
-            domain_specified=bool(cookie.get('domain')),
-            domain_initial_dot=cookie.get('domain', '').startswith('.'),
-            path=cookie.get('path', '/'),
-            path_specified=True,
-            secure=cookie.get('secure', False),
-            expires=cookie.get('expiry'),
-            discard=False,
-            comment=None,
-            comment_url=None,
-            rest={}
-        )
-        cj.set_cookie(c)
-    cj.save(path, ignore_discard=True)
-    print("✅ cookies.txt сохранён!")
+        c = {
+            "version": 0,
+            "name": cookie["name"],
+            "value": cookie["value"],
+            "port": None,
+            "domain": cookie["domain"],
+            "path": cookie["path"],
+            "secure": cookie.get("secure", False),
+            "expires": cookie.get("expiry"),
+            "discard": False,
+            "comment": None,
+            "comment_url": None,
+            "rest": {},
+            "rfc2109": False,
+        }
+        cj.set_cookie(cj._cookie_from_cookie_tuple((c["name"], c["value"], c["domain"], c["path"])))
+    cj.save(ignore_discard=True, ignore_expires=True)
 
-if __name__ == "__main__":
-    print("➡️ Запускаю браузер в headless-режиме...")
+options = uc.ChromeOptions()
+options.user_data_dir = PROFILE_DIR
+options.add_argument("--headless=new")
+options.binary_location = "/usr/bin/chromium"
 
-    options = Options()
-    options.binary_location = "/usr/bin/chromium"
-    options.add_argument(f"--user-data-dir={PROFILE_PATH}")
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+driver = uc.Chrome(options=options, headless=True)
 
-    driver = uc.Chrome(options=options, headless=True)
+try:
     driver.get("https://www.youtube.com")
     time.sleep(5)
-
     save_cookies(driver, COOKIES_TXT)
+    print("✅ cookies.txt сохранён!")
+finally:
     driver.quit()
-
