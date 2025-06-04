@@ -158,10 +158,21 @@ def download_video():
                 app.logger.error("Ошибка парсинга кукиз, продолжаем без них")
                 cookies = []
         
-        # Настройка yt-dlp
+        # Настройка yt-dlp с антибот защитой
         ydl_opts = {
             'format': 'best[height<=720]',
             'outtmpl': f'/tmp/{video_id}.%(ext)s',
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android'],
+                    'player_skip': ['webpage']
+                }
+            },
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36'
+            },
+            'sleep_interval': 1,
+            'max_sleep_interval': 5,
         }
         
         # Создаем временный файл с кукиз если они есть
@@ -180,8 +191,13 @@ def download_video():
             except Exception as e:
                 app.logger.error(f"Ошибка создания файла кукиз: {str(e)}")
         
-        # Скачивание
+        # Скачивание с задержкой
         app.logger.info("Начинаем скачивание с yt-dlp...")
+        
+        # Случайная задержка для обхода антибот защиты
+        delay = random.uniform(1, 3)
+        app.logger.info(f"Ждем {delay:.2f} секунд перед скачиванием...")
+        time.sleep(delay)
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
