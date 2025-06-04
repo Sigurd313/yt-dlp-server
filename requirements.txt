@@ -1,3 +1,5 @@
-Flask
-selenium
-undetected-chromedriver
+Flask==2.3.3
+yt-dlp==2023.9.24
+requests==2.31.0
+undetected-chromedriver==3.5.3
+selenium==4.15.0
