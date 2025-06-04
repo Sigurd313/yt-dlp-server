@@ -31,7 +31,7 @@ def save_netscape_cookies(driver, filename):
 if __name__ == "__main__":
     options = uc.ChromeOptions()
     options.add_argument("--user-data-dir=selenium-profile")  # сохраняем сессию
-    driver = uc.Chrome(options=options, headless=False)
+    driver = uc.Chrome(service=Service(), options=options, headless=True)
 
     driver.get(URL)
     print("➡️ Залогинься вручную, затем нажми Enter здесь...")
