@@ -158,21 +158,24 @@ def download_video():
                 app.logger.error("Ошибка парсинга кукиз, продолжаем без них")
                 cookies = []
         
-        # Настройка yt-dlp с антибот защитой
+        # Настройка yt-dlp с расширенными опциями обхода
         ydl_opts = {
-            'format': 'best[height<=720]',
+            'format': 'worst[height<=480]/best[height<=720]',
             'outtmpl': f'/tmp/{video_id}.%(ext)s',
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android'],
-                    'player_skip': ['webpage']
+                    'player_client': ['android', 'web'],
+                    'player_skip': ['webpage'],
+                    'skip': ['hls', 'dash']
                 }
             },
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36'
+                'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
             },
             'sleep_interval': 1,
             'max_sleep_interval': 5,
+            'ignore_errors': False,
+            'no_warnings': False
         }
         
         # Создаем временный файл с кукиз если они есть
